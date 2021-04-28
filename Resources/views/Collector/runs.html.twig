@@ -7,50 +7,34 @@
         <p>No serializer runs.</p>
     </div>
 {%- else -%}
-    <table>
-        <thead>
-        <tr>
-            <th>Direction</th>
-            <th>Format</th>
-            <th>Type</th>
-            <th>Properties</th>
-            <th>Total duration (ms)</th>
-        </tr>
-        </thead>
 
-        {%- for run in collector.runs -%}
-            <tr>
-                <th>
-                    {%- if run.direction == constant('JMS\\Serializer\\GraphNavigatorInterface::DIRECTION_SERIALIZATION') -%}
-                        Serialization
-                    {%- else -%}
-                        Deserialization
-                    {%- endif -%}
-                </th>
-                <td>{{ run.format }}</td>
-                <td>{{ run.type.name|default }}</td>
-                <td class="text-right">{{ run.properties|length }}</td>
-                <th class="text-right">{{ run.duration ? (run.duration * 1000)|number_format(2) : '' }}</th>
-            </tr>
+    <div class="sf-tabs">
+        {%- for i, run in collector.runs -%}
+            <div class="tab">
+                <h3 class="tab-title jms-toggle" data-toggle="#jms-run-{{ i }}">
+                    {{ run.direction == constant('JMS\\Serializer\\GraphNavigatorInterface::DIRECTION_SERIALIZATION') ? 'serialization' : 'deserialization' }}
+                    {{ run.format }}
+                    <span class="badge">{{ run.duration ? (run.duration * 1000)|number_format(2) : '' }}ms</span>
+                </h3>
+
+                <div class="tab-content">
+                    <div id="jms-run-{{ i }}">
+                        <h4>
+                            <code>{{ run.type.name }} </code>
+                            <code class="sf-dump-str">{{ (run.duration * 1000)|number_format(2) }}ms</code>
+                        </h4>
+
+                        <ul>
+                            {%- for propertyName, child in run.properties -%}
+                                <li>{{ helper.render_node(propertyName, child, run.duration) }}</li>
+                            {%- endfor -%}
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
         {%- endfor -%}
-    </table>
-
-    {%- for run in collector.runs -%}
-        <h3>
-            <span>{{ run.direction == constant('JMS\\Serializer\\GraphNavigatorInterface::DIRECTION_SERIALIZATION') ? 'serialization' : 'seserialization' }}:{{ run.format }}</span>
-        </h3>
-        <h4>
-            <code>{{ run.type.name }} </code>
-            <code class="sf-dump-str">{{ (run.duration * 1000)|number_format(2) }} ms</code>
-        </h4>
-
-        <ul>
-            {%- for propertyName, child in run.properties -%}
-                <li>{{ helper.render_node(propertyName, child, run.duration) }}</li>
-            {%- endfor -%}
-        </ul>
-    {%- endfor -%}
-
+    </div>
 {%- endif -%}
 
 {%- macro render_node(propertyName, run, totalDuration) -%}
