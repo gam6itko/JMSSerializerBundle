@@ -6,7 +6,7 @@ use JMS\Serializer\Handler\HandlerRegistryInterface;
 use JMS\Serializer\Handler\SubscribingHandlerInterface;
 use Psr\Container\ContainerInterface;
 
-class TraceableHandlerRegistry implements HandlerRegistryInterface
+final class TraceableHandlerRegistry implements HandlerRegistryInterface
 {
     private $container;
     private $registry;

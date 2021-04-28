@@ -75,10 +75,6 @@ class EventListenerPass implements CompilerPassInterface
      */
     private function decorateListener(ContainerBuilder $container, string $id): string
     {
-        if ('jms_serializer.stopwatch_subscriber' === $id) {
-            return $id;
-        }
-
         if (0 === strpos($id, $prefix = 'debug.event_listener')) {
             return $id;
         }

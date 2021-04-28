@@ -1,4 +1,4 @@
-{% import _self as helper %}
+{%- import _self as helper -%}
 
 <h1>Event Dispatcher</h1>
 
@@ -7,7 +7,13 @@
         <div class="tab-title">Triggered Listeners <span class="badge">{{ collector.triggeredListeners|length }}</span></div>
 
         <div class="tab-content">
-            {{ helper.render_table(collector.triggeredListeners, true) }}
+            {%- if 0 == collector.triggeredListeners|length -%}
+                <div class="empty">
+                    <p>No triggered listeners.</p>
+                </div>
+            {%- else -%}
+                {{- helper.render_table(collector.triggeredListeners, true) -}}
+            {%- endif -%}
         </div>
     </div>
 
@@ -19,8 +25,8 @@
     </div>
 </div>
 
-{% macro render_table(listeners, called) %}
-    {% for eventName, calls in listeners %}
+{%- macro render_table(listeners, called) -%}
+    {%- for eventName, calls in listeners -%}
         <h3>{{ eventName }}</h3>
         <table>
             <thead>
@@ -31,23 +37,23 @@
                 <th>Format</th>
                 {%- if called|default(false) -%}
                     <th>Calls</th>
-                    <th>Total duration (sec)</th>
+                    <th>Total duration (ms)</th>
                 {%- endif -%}
             </tr>
             </thead>
 
-            {% for call in calls %}
+            {%- for call in calls -%}
                 <tr>
                     <td>{{ call.listener }}</td>
                     <td>{{ call.method }}</td>
                     <td>{{ call.interface }}</td>
                     <td>{{ call.format }}</td>
                     {%- if called|default(false) -%}
-                        <td>{{ call.calls|length }}</td>
-                        <td>{{ call.totalDuration|default }}</td>
+                        <td class="text-right">{{ call.calls|length }}</td>
+                        <td class="text-right">{{ call.totalDuration ? (call.totalDuration * 1000)|number_format(4) : '' }}</td>
                     {%- endif -%}
                 </tr>
-            {% endfor %}
+            {%- endfor -%}
         </table>
-    {% endfor %}
-{% endmacro %}
+    {%- endfor -%}
+{%- endmacro -%}

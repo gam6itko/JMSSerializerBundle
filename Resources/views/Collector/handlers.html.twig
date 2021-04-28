@@ -1,4 +1,4 @@
-{% import _self as helper %}
+{%- import _self as helper -%}
 
 <h1>Type Handlers</h1>
 
@@ -7,7 +7,13 @@
         <h3 class="tab-title">Triggered Handlers <span class="badge">{{ collector.triggeredHandlers|length }}</span></h3>
 
         <div class="tab-content">
-            {{ helper.render_table(collector.triggeredHandlers, true) }}
+            {%- if 0 == collector.triggeredHandlers|length -%}
+                <div class="empty">
+                    <p>No triggered handlers.</p>
+                </div>
+            {%- else -%}
+                {{- helper.render_table(collector.triggeredHandlers, true) -}}
+            {%- endif -%}
         </div>
     </div>
 
@@ -19,8 +25,8 @@
     </div>
 </div>
 
-{% macro render_table(listeners, called) %}
-    {% for direction, calls in listeners %}
+{%- macro render_table(listeners, called) -%}
+    {%- for direction, calls in listeners -%}
         <h3>
             {%- if direction == constant('JMS\\Serializer\\GraphNavigatorInterface::DIRECTION_SERIALIZATION') -%}
                 Serialization
@@ -37,7 +43,7 @@
                 <th>Format</th>
                 {%- if called|default(false) -%}
                     <th>Calls</th>
-                    <th>Total duration (sec)</th>
+                    <th>Total duration (ms)</th>
                 {%- endif -%}
             </tr>
             </thead>
@@ -48,11 +54,11 @@
                     <td>{{ call.method }}</td>
                     <td>{{ call.format }}</td>
                     {%- if called|default(false) -%}
-                        <td>{{ call.calls|length }}</td>
-                        <td>{{ call.totalDuration|default }}</td>
+                        <td class="text-right">{{ call.calls|length }}</td>
+                        <td class="text-right">{{ call.totalDuration ?  (call.totalDuration * 1000)|number_format(4) : '' }}</td>
                     {%- endif -%}
                 </tr>
             {%- endfor -%}
         </table>
-    {% endfor %}
-{% endmacro %}
+    {%- endfor -%}
+{%- endmacro -%}

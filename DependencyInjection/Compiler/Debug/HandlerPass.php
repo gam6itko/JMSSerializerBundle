@@ -77,11 +77,4 @@ class HandlerPass implements CompilerPassInterface
 
         return $newId;
     }
-
-    private function toReferenceMap(array $listenerServicesIds): array
-    {
-        return array_combine($listenerServicesIds, array_map(static function (string $id): Reference {
-            return new Reference($id);
-        }, $listenerServicesIds));
-    }
 }

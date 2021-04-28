@@ -24,14 +24,15 @@ class DataCollectorPass implements CompilerPassInterface
 
         $collector = $container->register($id = 'data_collector.jms_serializer', DataCollector::class);
         $collector
+            ->addArgument(new Reference('debug.jms_serializer.visitor_traces_collector'))
             ->addArgument(new Reference('debug.jms_serializer.event_dispatcher'))
             ->addArgument(new Reference('debug.jms_serializer.handler_registry'));
 
-        $profiler->addMethodCall('add', [$collector]);
+        $profiler->addMethodCall('add', [new Reference($id)]);
 
         // add template
         $templates = $container->getParameter('data_collector.templates');
-        $templates[$id] = ['jms_serializer', '@JMSSerializer/Collector/panel'];
+        $templates[$id] = ['jms_serializer', '@JMSSerializer/Collector/panel.html.twig'];
         $container->setParameter('data_collector.templates', $templates);
     }
 }

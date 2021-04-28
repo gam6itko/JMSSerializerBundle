@@ -4,9 +4,11 @@ namespace JMS\SerializerBundle;
 
 use JMS\DiExtraBundle\DependencyInjection\Compiler\LazyServiceMapPass;
 use JMS\SerializerBundle\DependencyInjection\Compiler\CustomHandlersPass;
-use JMS\SerializerBundle\DependencyInjection\Compiler\Debug\EventListenerPass as DebugEventListenerPass;
 use JMS\SerializerBundle\DependencyInjection\Compiler\Debug\DataCollectorPass as DebugDataCollectorPass;
+use JMS\SerializerBundle\DependencyInjection\Compiler\Debug\EventListenerPass as DebugEventListenerPass;
 use JMS\SerializerBundle\DependencyInjection\Compiler\Debug\HandlerPass as DebugHandlerPass;
+use JMS\SerializerBundle\DependencyInjection\Compiler\Debug\StopwatchPass as DebugStopwatchPass;
+use JMS\SerializerBundle\DependencyInjection\Compiler\Debug\VisitorPass as DebugVisitorPass;
 use JMS\SerializerBundle\DependencyInjection\Compiler\DoctrinePass;
 use JMS\SerializerBundle\DependencyInjection\Compiler\ExpressionFunctionProviderPass;
 use JMS\SerializerBundle\DependencyInjection\Compiler\FormErrorHandlerTranslationDomainPass;
@@ -48,6 +50,8 @@ class JMSSerializerBundle extends Bundle
         $builder->addCompilerPass(new CustomHandlersPass(), PassConfig::TYPE_BEFORE_REMOVING);
 
         if ($builder->getParameter('kernel.debug')) {
+            $builder->addCompilerPass(new DebugStopwatchPass());
+            $builder->addCompilerPass(new DebugVisitorPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, -16);
             $builder->addCompilerPass(new DebugEventListenerPass(), PassConfig::TYPE_BEFORE_REMOVING, -128);
             $builder->addCompilerPass(new DebugHandlerPass(), PassConfig::TYPE_BEFORE_REMOVING, -128);
             $builder->addCompilerPass(new DebugDataCollectorPass(), PassConfig::TYPE_BEFORE_REMOVING, -130);

@@ -4,7 +4,7 @@ namespace JMS\SerializerBundle\Debug\EventDispatcher;
 
 use JMS\SerializerBundle\Debug\TraceableTrait;
 
-class TraceableEventListener
+final class TraceableEventListener
 {
     use TraceableTrait;
 
@@ -18,13 +18,13 @@ class TraceableEventListener
         $format = $arguments[3];
 
         $call = [
-            'when' => microtime(true),
+            'start' => microtime(true),
         ];
 
         try {
             return call_user_func_array([$this->inner, $method], $arguments);
         } finally {
-            $call['duration'] = microtime(true) - $call['when'];
+            $call['duration'] = microtime(true) - $call['start'];
             $this->calls[$format][] = $call;
         }
     }

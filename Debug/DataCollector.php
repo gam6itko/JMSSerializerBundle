@@ -5,20 +5,22 @@ declare(strict_types=1);
 namespace JMS\SerializerBundle\Debug;
 
 use JMS\SerializerBundle\Debug\EventDispatcher\TraceableEventDispatcher;
-use JMS\SerializerBundle\Debug\Handler\TraceableHandler;
 use JMS\SerializerBundle\Debug\Handler\TraceableHandlerRegistry;
+use JMS\SerializerBundle\Debug\Visitor\VisitorTracesCollector;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector as BaseDataCollector;
 use Symfony\Component\HttpKernel\DataCollector\LateDataCollectorInterface;
 
-class DataCollector extends BaseDataCollector implements LateDataCollectorInterface
+final class DataCollector extends BaseDataCollector implements LateDataCollectorInterface
 {
+    private $visitorTracesCollector;
     private $eventDispatcher;
     private $handler;
 
-    public function __construct(TraceableEventDispatcher $eventDispatcher, TraceableHandlerRegistry $handler)
+    public function __construct(VisitorTracesCollector $visitorTracesCollector, TraceableEventDispatcher $eventDispatcher, TraceableHandlerRegistry $handler)
     {
+        $this->visitorTracesCollector = $visitorTracesCollector;
         $this->eventDispatcher = $eventDispatcher;
         $this->handler = $handler;
 
@@ -82,13 +84,27 @@ class DataCollector extends BaseDataCollector implements LateDataCollectorInterf
         return 0;
     }
 
-    public function getRuns()
+    public function getRuns(): array
     {
-        return [];
+        return $this->data['runs'];
+    }
+
+    /**
+     * @return float|int In milliseconds
+     */
+    public function getRunsDuration()
+    {
+        if (empty($this->data['runs'])) {
+            return 0;
+        }
+
+        return array_sum(array_column($this->data['runs'], 'duration')) * 1000;
     }
 
     public function lateCollect()
     {
+        $this->data['runs'] = $this->visitorTracesCollector->getRuns();
+
         $this->data['listeners'] = [
             'called'     => $this->eventDispatcher->getTriggeredListeners(),
             'not_called' => $this->eventDispatcher->getNotTriggeredListeners(),

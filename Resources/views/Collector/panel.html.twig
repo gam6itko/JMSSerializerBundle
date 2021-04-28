@@ -1,16 +1,16 @@
-{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+{%- extends '@WebProfiler/Profiler/layout.html.twig' -%}
 
-{% block toolbar %}
+{%- block toolbar -%}
 
-    {% set icon %}
+    {%- set icon -%}
         {{ include('@JMSSerializer/icon.svg') }}
         <span class="sf-toolbar-value">{{ collector.runs|length }}</span>
         <span class="sf-toolbar-label">in</span>
-        <span class="sf-toolbar-value">{{ collector.totalDuration|number_format }}</span>
+        <span class="sf-toolbar-value">{{ collector.runsDuration|number_format(2) }}</span>
         <span class="sf-toolbar-label">ms</span>
-    {% endset %}
+    {%- endset -%}
 
-    {% set text %}
+    {%- set text -%}
         <div class="sf-toolbar-info-piece">
             <b>Runs</b>
             <span class="sf-toolbar-status">{{ collector.runs|length }}</span>
@@ -27,12 +27,12 @@
             <b>Metadata</b>
             <span class="sf-toolbar-status">{{ collector.loadedMetadata|length }}</span>
         </div>
-    {% endset %}
+    {%- endset -%}
 
-    {% include '@WebProfiler/Profiler/toolbar_item.html.twig' with { 'link': profiler_url } %}
-{% endblock %}
+    {%- include '@WebProfiler/Profiler/toolbar_item.html.twig' with { 'link': profiler_url } -%}
+{%- endblock -%}
 
-{% block head %}
+{%- block head -%}
     <style>
         {{ include('@JMSSerializer/Collector/style/httplug.css.twig') }}
     </style>
@@ -40,9 +40,9 @@
         {{ include('@JMSSerializer/Collector/script/httplug.js.twig') }}
     </script>
     {{ parent() }}
-{% endblock %}
+{%- endblock -%}
 
-{% block menu %}
+{%- block menu -%}
     {# This left-hand menu appears when using the full-screen profiler. #}
     <span class="label {{ false ? 'disabled' }} {{ true |length ? 'label-status-error' }}">
         <span class="icon">
@@ -50,10 +50,23 @@
         </span>
         <strong>JMS Serializer</strong>
     </span>
-{% endblock %}
+{%- endblock -%}
 
-{% block panel %}
+{%- block panel -%}
     <h2>JMS Serializer</h2>
+
+    <div class="metrics">
+        <div class="metric">
+            <span class="value">{{ collector.runsDuration|number_format(2) }} <span class="unit">ms</span></span>
+            <span class="label">Total execution time</span>
+        </div>
+
+        <div class="metric">
+            <span class="value">{{ collector.runs|length }}</span>
+            <span class="label">Serializer runs</span>
+        </div>
+    </div>
+
     <div class="sf-tabs">
         <div class="tab">
             <h3 class="tab-title jms-toggle" data-toggle="#jms-runs">Runs <span class="badge">{{ collector.runs|length }}</span></h3>
@@ -62,7 +75,7 @@
                 <p class="help">Serializer calls</p>
 
                 <div id="jms-events">
-                    {%- include '@JMSSerializer/Collector/runs.html.twig' with {'data': collector.runs} only -%}
+                    {%- include '@JMSSerializer/Collector/runs.html.twig' -%}
                 </div>
 
             </div>
@@ -106,11 +119,11 @@
                 </p>
 
                 <div id="jms-metadata">
-                    {% include '@JMSSerializer/Collector/metadata.html.twig' with {
+                    {%- include '@JMSSerializer/Collector/metadata.html.twig' with {
                         'data': collector.loadedMetadata
-                    } only %}
+                    } only -%}
                 </div>
             </div>
         </div>
     </div>
-{% endblock %}
+{%- endblock -%}
