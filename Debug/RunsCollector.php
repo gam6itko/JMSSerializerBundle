@@ -2,6 +2,7 @@
 
 namespace JMS\SerializerBundle\Debug;
 
+use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
 
@@ -22,10 +23,13 @@ final class RunsCollector
     private $arrayVisitStack;
 
     /** @var \SplStack */
-    private $stopwathStack;
+    private $propertyTimerStack;
 
     /** @var \SplStack */
     private $handlerStack;
+
+    /** @var \SplStack */
+    private $eventListenerStack;
 
     public function startVisitingArray($data, $type): void
     {
@@ -47,14 +51,14 @@ final class RunsCollector
         $this->propertyStack->push($this->currentProperty);
         $this->currentProperty = $metadata->name;
 
-        $this->stopwathStack->push(microtime(true));
+        $this->propertyTimerStack->push(microtime(true));
     }
 
     public function endVisitingProperty(PropertyMetadata $metadata, $data): void
     {
-        assert($this->stopwathStack->count() > 0);
+        assert($this->propertyTimerStack->count() > 0);
 
-        $this->currentObject['properties'][$this->currentProperty]['duration'] = microtime(true) - $this->stopwathStack->pop();
+        $this->currentObject['properties'][$this->currentProperty]['duration'] = microtime(true) - $this->propertyTimerStack->pop();
         $this->currentObject['properties'][$this->currentProperty]['type'] = $metadata->type ?? ['name' => gettype($data)];
 
         $this->currentProperty = $this->propertyStack->pop();
@@ -90,8 +94,9 @@ final class RunsCollector
         assert(empty($this->objectStack) || $this->objectStack->isEmpty());
         assert(empty($this->propertyStack) || $this->propertyStack->isEmpty());
         assert(empty($this->arrayVisitStack) || $this->arrayVisitStack->isEmpty());
-        assert(empty($this->stopwathStack) || $this->stopwathStack->isEmpty());
+        assert(empty($this->propertyTimerStack) || $this->propertyTimerStack->isEmpty());
         assert(empty($this->handlerStack) || $this->handlerStack->isEmpty());
+        assert(empty($this->eventListenerStack) || $this->eventListenerStack->isEmpty());
 
         $this->reset();
     }
@@ -126,7 +131,10 @@ final class RunsCollector
                 $this->currentObject['duration'] += $child['duration'];
             }
         } elseif ($this->currentProperty) {
-            $this->currentObject['properties'][$this->currentProperty] = $child;
+            $this->currentObject['properties'][$this->currentProperty] = array_merge(
+                $this->currentObject['properties'][$this->currentProperty] ?? [],
+                $child
+            );
         } elseif (0 === $this->objectStack->count()) {
             // object is root
             $this->currentObject = $child;
@@ -138,8 +146,9 @@ final class RunsCollector
         $this->objectStack = new \SplStack();
         $this->propertyStack = new \SplStack();
         $this->arrayVisitStack = new \SplStack();
-        $this->stopwathStack = new \SplStack();
+        $this->propertyTimerStack = new \SplStack();
         $this->handlerStack = new \SplStack();
+        $this->eventListenerStack = new \SplStack();
 
         $this->currentObject = [
             'duration'   => 0,
@@ -171,5 +180,41 @@ final class RunsCollector
         $this->currentObject['properties'][$this->currentProperty]['handlers'][] = $handlerTrace;
 
         return $handlerTrace['duration'];
+    }
+
+    public function startEventListener(string $event, string $listenerClass, string $method): float
+    {
+        $this->eventListenerStack->push([
+            'event'  => $event,
+            'class'  => $listenerClass,
+            'method' => $method,
+            'start'  => $start = microtime(true),
+        ]);
+
+        return $start;
+    }
+
+    public function endEventListener(string $event, string $listenerClass, string $method): float
+    {
+        assert($this->eventListenerStack->count() > 0);
+
+        $elTrace = $this->eventListenerStack->pop();
+
+        if (Events::PRE_SERIALIZE === $event) {
+            assert(!empty($this->currentProperty));
+            $elTrace['duration'] = microtime(true) - $elTrace['start'];
+            $this->currentObject['properties'][$this->currentProperty]['eventListeners'][] = $elTrace;
+        } elseif (Events::POST_SERIALIZE === $event) {
+            $elTrace['duration'] = microtime(true) - $elTrace['start'];
+            $this->currentObject['eventListeners'][] = $elTrace;
+        }
+
+        if (Events::PRE_DESERIALIZE === $event) {
+            assert(false);//todo
+        } elseif (Events::POST_DESERIALIZE === $event) {
+            assert(false);//todo
+        }
+
+        return $elTrace['duration'];
     }
 }

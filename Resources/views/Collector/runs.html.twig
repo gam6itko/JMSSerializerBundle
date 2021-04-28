@@ -58,17 +58,32 @@
         <strong class="sf-dump-note">{{ propertyName }}</strong>: {{ run.type.name|default }}
         <code class="sf-dump-str">{{ (run.duration * 1000)|number_format(2) }}ms/{{ (run.duration / totalDuration * 100)|number_format(2) }}%</code>
     </div>
+
     {%- if run.handlers|default -%}
-        <div class="margin-bottom" title="handlers">
+        <div class="margin-bottom margin-left">
+            <div>Handlers:</div>
             {%- for handler in run.handlers -%}
-                <div class="margin-left">
+                <div>
                     <span class="sf-dump-ellipsis sf-dump-ellipsis-class">{{ handler.class }}</span>
                     <code class="sf-dump-str">{{ (handler.duration * 1000)|number_format(2) }}ms</code>
                 </div>
             {%- endfor -%}
         </div>
-
     {%- endif -%}
+
+    {%- if run.eventListeners|default -%}
+        <div class="margin-bottom margin-left">
+            <div>Event listeners:</div>
+            {%- for el in run.eventListeners -%}
+                <div>
+                    <span class="sf-dump-key">{{ el.event }}</span>
+                    <span class="sf-dump-ellipsis sf-dump-ellipsis-class">{{ el.class }}</span>::{{ el.method }}
+                    <code class="sf-dump-str">{{ (el.duration * 1000)|number_format(2) }}ms</code>
+                </div>
+            {%- endfor -%}
+        </div>
+    {%- endif -%}
+
     {%- if run.properties|default -%}
         <ul>
             {%- for propertyName, child in run.properties -%}

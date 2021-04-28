@@ -2,20 +2,26 @@
 
 namespace JMS\SerializerBundle\Debug\EventDispatcher;
 
+use JMS\SerializerBundle\Debug\RunsCollector;
 use JMS\SerializerBundle\Debug\TraceableTrait;
 
 final class TraceableEventListener
 {
     use TraceableTrait;
 
-    public function __construct(object $listener)
+    private $collector;
+
+    public function __construct(object $listener, RunsCollector $collector)
     {
         $this->inner = $listener;
+        $this->collector = $collector;
     }
 
     public function __call(string $method, array $arguments)
     {
         $format = $arguments[3];
+
+        $this->collector->startEventListener($arguments[1], $this->getInnerClass(), $method);
 
         $call = [
             'start' => microtime(true),
@@ -24,7 +30,7 @@ final class TraceableEventListener
         try {
             return call_user_func_array([$this->inner, $method], $arguments);
         } finally {
-            $call['duration'] = microtime(true) - $call['start'];
+            $call['duration'] = $this->collector->endEventListener($arguments[1], $this->getInnerClass(), $method);
             $this->calls[$format][] = $call;
         }
     }

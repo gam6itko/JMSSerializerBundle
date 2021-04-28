@@ -81,7 +81,8 @@ class EventListenerPass implements CompilerPassInterface
 
         $container
             ->register($newId = "$prefix.$id", TraceableEventListener::class)
-            ->addArgument(new Reference($id));
+            ->addArgument(new Reference($id))
+            ->addArgument(new Reference('debug.jms_serializer.runs_collector'));
 
         return $newId;
     }
