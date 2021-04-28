@@ -6,14 +6,18 @@ use JMS\Serializer\Context;
 use JMS\Serializer\GraphNavigatorInterface;
 use JMS\Serializer\SerializationContext;
 use JMS\SerializerBundle\Debug\TraceableTrait;
+use JMS\SerializerBundle\Debug\RunsCollector;
 
 final class TraceableHandler
 {
     use TraceableTrait;
 
-    public function __construct($handler)
+    private $collector;
+
+    public function __construct($handler, RunsCollector $collector)
     {
         $this->inner = $handler;
+        $this->collector = $collector;
     }
 
     public function __call(string $method, array $arguments)
@@ -22,6 +26,9 @@ final class TraceableHandler
         $context = $arguments[3];
         $direction = $context instanceof SerializationContext ? GraphNavigatorInterface::DIRECTION_SERIALIZATION : GraphNavigatorInterface::DIRECTION_DESERIALIZATION;
 
+
+        $this->collector->startHandler($this->getInnerClass());
+
         $call = [
             'start' => microtime(true),
         ];
@@ -29,7 +36,7 @@ final class TraceableHandler
         try {
             return call_user_func_array([$this->inner, $method], $arguments);
         } finally {
-            $call['duration'] = microtime(true) - $call['start'];
+            $call['duration'] = $this->collector->endHandler();
             $this->calls[$direction][$context->getFormat()][] = $call;
         }
     }

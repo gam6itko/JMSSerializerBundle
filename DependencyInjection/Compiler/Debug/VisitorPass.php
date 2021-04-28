@@ -1,10 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace JMS\SerializerBundle\DependencyInjection\Compiler\Debug;
 
+use JMS\SerializerBundle\Debug\RunsCollector;
 use JMS\SerializerBundle\Debug\Visitor\Factory\TraceableDeserializationVisitorFactory;
 use JMS\SerializerBundle\Debug\Visitor\Factory\TraceableSerializationVisitorFactory;
-use JMS\SerializerBundle\Debug\Visitor\VisitorTracesCollector;
 use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -14,7 +16,7 @@ class VisitorPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container)
     {
-        $container->register($collectorId = 'debug.jms_serializer.visitor_traces_collector', VisitorTracesCollector::class);
+        $container->register($collectorId = 'debug.jms_serializer.runs_collector', RunsCollector::class);
 
         foreach ($container->findTaggedServiceIds('jms_serializer.serialization_visitor') as $id => $tags) {
             $this->decorate($container, $id, TraceableSerializationVisitorFactory::class, $collectorId);

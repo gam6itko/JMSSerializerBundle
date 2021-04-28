@@ -7,12 +7,13 @@ use JMS\Serializer\JsonDeserializationVisitor;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
 use JMS\Serializer\Visitor\DeserializationVisitorInterface;
+use JMS\SerializerBundle\Debug\RunsCollector;
 
 final class TraceableDeserializationVisitor implements DeserializationVisitorInterface
 {
     use TraceableVisitorTrait;
 
-    public function __construct(DeserializationVisitorInterface $inner, ?VisitorTracesCollector $collector = null)
+    public function __construct(DeserializationVisitorInterface $inner, ?RunsCollector $collector = null)
     {
         $this->inner = $inner;
         $this->collector = $collector;
@@ -68,17 +69,18 @@ final class TraceableDeserializationVisitor implements DeserializationVisitorInt
         return $this->doEndVisitingObject($metadata, $data, $type);
     }
 
-    public function getResult($data)
-    {
-        $this->collector->addRun(GraphNavigatorInterface::DIRECTION_DESERIALIZATION, $this->getFormat(), $this->currentObject);
-        $this->reset();
-
-        return $this->inner->getResult($data);
-    }
-
     public function prepare($data)
     {
         return $this->inner->prepare($data);
+    }
+
+    public function getResult($data)
+    {
+        try {
+            return $this->inner->getResult($data);
+        } finally {
+            $this->collector->end(GraphNavigatorInterface::DIRECTION_DESERIALIZATION, $this->getFormat());
+        }
     }
 
     public function setNavigator(GraphNavigatorInterface $navigator): void
