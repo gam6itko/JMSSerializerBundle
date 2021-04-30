@@ -25,7 +25,7 @@
         </div>
         <div class="sf-toolbar-info-piece">
             <b>Metadata</b>
-            <span class="sf-toolbar-status {{ collector.loadedMetadata|length > 1 ? 'sf-toolbar-status-yellow' : '' }}">{{ collector.loadedMetadata|length }}</span>
+            <span class="sf-toolbar-status {{ collector.loadedMetadata|length > 0 ? 'sf-toolbar-status-yellow' : '' }}">{{ collector.loadedMetadata|length }}</span>
         </div>
     {%- endset -%}
 
@@ -39,6 +39,10 @@
     <style>
         .margin-left {
             margin-left: 10px;
+        }
+
+        .margin-top {
+            margin-top: 10px;
         }
 
         .margin-bottom {

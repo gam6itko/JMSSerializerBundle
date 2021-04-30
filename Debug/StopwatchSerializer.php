@@ -67,10 +67,10 @@ class StopwatchSerializer implements SerializerInterface, ArrayTransformerInterf
     {
         try {
             $this->stopwatch->start('jms_serializer');
-            $this->collector->start();
+            $this->collector->start($direction, $format);
             return call_user_func_array($callback, $args);
         } finally {
-            $this->collector->end($direction, $format);
+            $this->collector->end();
             $this->stopwatch->stop('jms_serializer');
         }
     }

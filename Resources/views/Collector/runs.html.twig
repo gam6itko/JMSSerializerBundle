@@ -48,11 +48,24 @@
         </code>
     </div>
 
+    {%- if run.eventListeners|default -%}
+        <div class="card">
+            <div class="label">Event listeners</div>
+            {%- for el in run.eventListeners -%}
+                <div class="margin-top">
+                    <span class="sf-dump-key">{{ el.event }}</span>
+                    <span class="sf-dump-ellipsis sf-dump-ellipsis-class">{{ el.class }}</span>::{{ el.method }}
+                    <code class="sf-dump-str">{{ (el.duration * 1000)|number_format(2) }}ms</code>
+                </div>
+            {%- endfor -%}
+        </div>
+    {%- endif -%}
+
     {%- if run.handlers|default -%}
-        <div class="margin-bottom margin-left">
-            <div>Handlers:</div>
+        <div class="card">
+            <div class="label">Handlers</div>
             {%- for handler in run.handlers -%}
-                <div>
+                <div class="margin-top">
                     <span class="sf-dump-ellipsis sf-dump-ellipsis-class">{{ handler.class }}</span>
                     <code class="sf-dump-str">{{ (handler.duration * 1000)|number_format(2) }}ms</code>
                 </div>
@@ -61,19 +74,6 @@
     {%- endif -%}
 
     {{- helper.metadata(run) -}}
-
-    {%- if run.eventListeners|default -%}
-        <div class="margin-bottom margin-left">
-            <div>Event listeners:</div>
-            {%- for el in run.eventListeners -%}
-                <div>
-                    <span class="sf-dump-key">{{ el.event }}</span>
-                    <span class="sf-dump-ellipsis sf-dump-ellipsis-class">{{ el.class }}</span>::{{ el.method }}
-                    <code class="sf-dump-str">{{ (el.duration * 1000)|number_format(2) }}ms</code>
-                </div>
-            {%- endfor -%}
-        </div>
-    {%- endif -%}
 
     {%- if run.properties|default -%}
         <ul>
@@ -86,17 +86,17 @@
 
 {%- macro metadata(run) -%}
     {%- if run.metadata|default -%}
-        <div class="margin-bottom margin-left">
-            <div>Metadata:</div>
+        <div class="card">
+            <div class="label">Metadata</div>
             {%- for md in run.metadata -%}
-                <div>
+                <div  class="margin-top">
                     <div>
                         <span class="sf-dump-ellipsis sf-dump-ellipsis-class">{{ md.class }}</span>
                         <span>{{ md.format }}</span>
                         <code class="sf-dump-str">{{ (md.duration * 1000)|number_format(2) }}ms</code>
                     </div>
                     {%- if md.file|default -%}
-                        <div>
+                        <div class="margin-bottom">
                             <code>{{ md.file }}</code>
                         </div>
                     {%- endif -%}
