@@ -33,6 +33,8 @@ final class RunsCollector
 
     private $loadedMetadata = [];
 
+    private $arrayObjectEventsStash = [];
+
     public function startVisitingArray($data, $type): void
     {
         // it is root array
@@ -70,14 +72,16 @@ final class RunsCollector
     {
         $this->objectStack->push($this->currentObject);
         $this->currentObject = [
-            'start'      => microtime(true),
-            'type'       => $type,
-            'duration'   => 0,
-            'properties' => [],
+            'start'          => microtime(true),
+            'type'           => $type,
+            'duration'       => 0,
+            'properties'     => [],
             'handlers'       => [],
-            'eventListeners' => [],
+            'eventListeners' => $this->arrayObjectEventsStash[Events::PRE_SERIALIZE] ?? [],
             'metadata'       => [],
         ];
+
+        $this->arrayObjectEventsStash[Events::PRE_SERIALIZE] = [];
     }
 
     public function endVisitingObject(ClassMetadata $metadata, $data, array $type): void
@@ -211,20 +215,21 @@ final class RunsCollector
         assert($this->eventListenerStack->count() > 0);
 
         $elTrace = $this->eventListenerStack->pop();
+        $elTrace['duration'] = microtime(true) - $elTrace['start'];
 
-        if (Events::PRE_SERIALIZE === $event) {
-            assert(!empty($this->currentProperty));
-            $elTrace['duration'] = microtime(true) - $elTrace['start'];
-            $this->currentObject['properties'][$this->currentProperty]['eventListeners'][] = $elTrace;
-        } elseif (Events::POST_SERIALIZE === $event) {
-            $elTrace['duration'] = microtime(true) - $elTrace['start'];
-            $this->currentObject['eventListeners'][] = $elTrace;
-        }
-
-        if (Events::PRE_DESERIALIZE === $event) {
-            //todo
-        } elseif (Events::POST_DESERIALIZE === $event) {
-            //todo
+        if ($this->withinArray()) {
+            //triggers before startVisitingObject
+            if (in_array($event, [Events::PRE_SERIALIZE, Events::PRE_DESERIALIZE])) {
+                $this->arrayObjectEventsStash[Events::PRE_SERIALIZE][] = $elTrace;
+            } else {
+                //todo
+            }
+        } else {
+            if (in_array($event, [Events::PRE_SERIALIZE, Events::PRE_DESERIALIZE])) {
+                $this->currentObject['properties'][$this->currentProperty]['eventListeners'][] = $elTrace;
+            } elseif (in_array($event, [Events::POST_SERIALIZE, Events::POST_DESERIALIZE])) {
+                $this->currentObject['eventListeners'][] = $elTrace;
+            }
         }
 
         return $elTrace['duration'];
