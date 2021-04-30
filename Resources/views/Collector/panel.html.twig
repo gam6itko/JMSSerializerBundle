@@ -25,7 +25,7 @@
         </div>
         <div class="sf-toolbar-info-piece">
             <b>Metadata</b>
-            <span class="sf-toolbar-status">{{ collector.loadedMetadata|length }}</span>
+            <span class="sf-toolbar-status {{ collector.loadedMetadata|length > 1 ? 'sf-toolbar-status-yellow' : '' }}">{{ collector.loadedMetadata|length }}</span>
         </div>
     {%- endset -%}
 
@@ -40,6 +40,7 @@
         .margin-left {
             margin-left: 10px;
         }
+
         .margin-bottom {
             margin-bottom: 10px;
         }
@@ -77,7 +78,8 @@
 
     <div class="sf-tabs">
         <div class="tab">
-            <h3 class="tab-title jms-toggle" data-toggle="#jms-runs">Runs <span class="badge">{{ collector.runs|length }}</span></h3>
+            <h3 class="tab-title jms-toggle" data-toggle="#jms-runs">Runs <span
+                        class="badge">{{ collector.runs|length }}</span></h3>
 
             <div class="tab-content">
                 <p class="help">Serializer calls</p>
@@ -90,7 +92,8 @@
         </div>
 
         <div class="tab">
-            <h3 class="tab-title jms-toggle" data-toggle="#jms-events">Events <span class="badge">{{ collector.triggeredListeners|length }}</span></h3>
+            <h3 class="tab-title jms-toggle" data-toggle="#jms-events">Events <span
+                        class="badge">{{ collector.triggeredListeners|length }}</span></h3>
 
             <div class="tab-content">
                 <p class="help">
@@ -105,7 +108,8 @@
         </div>
 
         <div class="tab">
-            <h3  class="tab-title jms-toggle" data-toggle="#jms-handlers">Handlers <span class="badge">{{ collector.triggeredHandlers|length }}</span></h3>
+            <h3 class="tab-title jms-toggle" data-toggle="#jms-handlers">Handlers <span
+                        class="badge">{{ collector.triggeredHandlers|length }}</span></h3>
 
             <div class="tab-content">
                 <p class="help">
@@ -127,9 +131,7 @@
                 </p>
 
                 <div id="jms-metadata">
-                    {%- include '@JMSSerializer/Collector/metadata.html.twig' with {
-                        'data': collector.loadedMetadata
-                    } only -%}
+                    {%- include '@JMSSerializer/Collector/metadata.html.twig' -%}
                 </div>
             </div>
         </div>

@@ -24,6 +24,8 @@
                             <code class="sf-dump-str">{{ (run.duration * 1000)|number_format(2) }}ms</code>
                         </h4>
 
+                        {{- helper.metadata(run) -}}
+
                         <ul>
                             {%- for propertyName, child in run.properties -%}
                                 <li>{{ helper.render_node(propertyName, child, run.duration) }}</li>
@@ -40,7 +42,10 @@
 {%- macro render_node(propertyName, run, totalDuration) -%}
     <div class="margin-bottom">
         <strong class="sf-dump-note">{{ propertyName }}</strong>: {{ run.type.name|default }}
-        <code class="sf-dump-str">{{ (run.duration * 1000)|number_format(2) }}ms/{{ (run.duration / totalDuration * 100)|number_format(2) }}%</code>
+        <code class="sf-dump-str">
+            {{- (run.duration * 1000)|number_format(2) }}ms/{{ (run.duration / totalDuration * 100)|number_format(2) -}}
+            %
+        </code>
     </div>
 
     {%- if run.handlers|default -%}
@@ -54,6 +59,8 @@
             {%- endfor -%}
         </div>
     {%- endif -%}
+
+    {{- helper.metadata(run) -}}
 
     {%- if run.eventListeners|default -%}
         <div class="margin-bottom margin-left">
@@ -77,3 +84,24 @@
     {%- endif -%}
 {%- endmacro -%}
 
+{%- macro metadata(run) -%}
+    {%- if run.metadata|default -%}
+        <div class="margin-bottom margin-left">
+            <div>Metadata:</div>
+            {%- for md in run.metadata -%}
+                <div>
+                    <div>
+                        <span class="sf-dump-ellipsis sf-dump-ellipsis-class">{{ md.class }}</span>
+                        <span>{{ md.format }}</span>
+                        <code class="sf-dump-str">{{ (md.duration * 1000)|number_format(2) }}ms</code>
+                    </div>
+                    {%- if md.file|default -%}
+                        <div>
+                            <code>{{ md.file }}</code>
+                        </div>
+                    {%- endif -%}
+                </div>
+            {%- endfor -%}
+        </div>
+    {%- endif -%}
+{%- endmacro -%}

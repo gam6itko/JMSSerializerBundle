@@ -6,7 +6,7 @@ namespace JMS\SerializerBundle\Debug;
 
 use JMS\SerializerBundle\Debug\EventDispatcher\TraceableEventDispatcher;
 use JMS\SerializerBundle\Debug\Handler\TraceableHandlerRegistry;
-use JMS\SerializerBundle\Debug\RunsCollector;
+use JMS\SerializerBundle\Debug\Metadata\MetadataCollector;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector as BaseDataCollector;
@@ -14,13 +14,13 @@ use Symfony\Component\HttpKernel\DataCollector\LateDataCollectorInterface;
 
 final class DataCollector extends BaseDataCollector implements LateDataCollectorInterface
 {
-    private $visitorTracesCollector;
+    private $runsCollector;
     private $eventDispatcher;
     private $handler;
 
-    public function __construct(RunsCollector $visitorTracesCollector, TraceableEventDispatcher $eventDispatcher, TraceableHandlerRegistry $handler)
+    public function __construct(RunsCollector $runsCollector, TraceableEventDispatcher $eventDispatcher, TraceableHandlerRegistry $handler)
     {
-        $this->visitorTracesCollector = $visitorTracesCollector;
+        $this->runsCollector = $runsCollector;
         $this->eventDispatcher = $eventDispatcher;
         $this->handler = $handler;
 
@@ -33,7 +33,6 @@ final class DataCollector extends BaseDataCollector implements LateDataCollector
 
     public function reset(): void
     {
-        $this->stack = new \SplStack();
         $this->data['handlers'] = [];
         $this->data['metadata'] = [];
         $this->data['listeners'] = [];
@@ -49,39 +48,30 @@ final class DataCollector extends BaseDataCollector implements LateDataCollector
         $this->data['listeners'][] = $call;
     }
 
-    public function getTriggeredListeners()
+    public function getTriggeredListeners(): array
     {
         return $this->data['listeners']['called'];
     }
 
-    public function getNotTriggeredListeners()
+    public function getNotTriggeredListeners(): array
     {
         return $this->data['listeners']['not_called'];
     }
 
-    public function getTriggeredHandlers()
+    public function getTriggeredHandlers(): array
     {
         return $this->data['handlers']['called'];
     }
 
-    public function getNotTriggeredHandlers()
+    public function getNotTriggeredHandlers(): array
     {
         return $this->data['handlers']['not_called'];
     }
 
-    public function addMetadataLoad(string $class, string $loader, $loaded)
-    {
-        $this->data['metadata'][$class][$loader]['result'] = !!$loaded;
-    }
 
-    public function getLoadedMetadata()
+    public function getLoadedMetadata(): array
     {
         return $this->data['metadata'];
-    }
-
-    public function getTotalDuration()
-    {
-        return 0;
     }
 
     public function getRuns(): array
@@ -101,9 +91,9 @@ final class DataCollector extends BaseDataCollector implements LateDataCollector
         return array_sum(array_column($this->data['runs'], 'duration')) * 1000;
     }
 
-    public function lateCollect()
+    public function lateCollect(): void
     {
-        $this->data['runs'] = $this->visitorTracesCollector->getRuns();
+        $this->data['runs'] = $this->runsCollector->getRuns();
 
         $this->data['listeners'] = [
             'called'     => $this->eventDispatcher->getTriggeredListeners(),
@@ -114,5 +104,7 @@ final class DataCollector extends BaseDataCollector implements LateDataCollector
             'called'     => $this->handler->getTriggeredHandlers(),
             'not_called' => $this->handler->getNotTriggeredHandlers(),
         ];
+
+        $this->data['metadata'] = $this->runsCollector->getLoadedMetadata();
     }
 }

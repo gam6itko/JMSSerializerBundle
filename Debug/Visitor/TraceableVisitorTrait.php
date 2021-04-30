@@ -12,7 +12,6 @@ trait TraceableVisitorTrait
     /** @var RunsCollector */
     private $collector;
 
-
     private function doVisitArray($data, $type)
     {
         $this->collector->startVisitingArray($data, $type);

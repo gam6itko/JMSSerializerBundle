@@ -2,6 +2,7 @@
 
 namespace JMS\SerializerBundle\Debug;
 
+use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
 
@@ -29,6 +30,8 @@ final class RunsCollector
 
     /** @var \SplStack */
     private $eventListenerStack;
+
+    private $loadedMetadata = [];
 
     public function startVisitingArray($data, $type): void
     {
@@ -69,8 +72,11 @@ final class RunsCollector
         $this->currentObject = [
             'start'      => microtime(true),
             'type'       => $type,
-            'properties' => [],
             'duration'   => 0,
+            'properties' => [],
+            'handlers'       => [],
+            'eventListeners' => [],
+            'metadata'       => [],
         ];
     }
 
@@ -86,6 +92,11 @@ final class RunsCollector
     public function getRuns(): array
     {
         return $this->runs;
+    }
+
+    public function getLoadedMetadata()
+    {
+        return $this->loadedMetadata;
     }
 
     public function start(): void
@@ -150,9 +161,11 @@ final class RunsCollector
         $this->eventListenerStack = new \SplStack();
 
         $this->currentObject = [
-            'duration'   => 0,
-            'properties' => [],
-            'handlers'   => [],
+            'duration'       => 0,
+            'properties'     => [],
+            'handlers'       => [],
+            'eventListeners' => [],
+            'metadata'       => [],
         ];
 
         $this->currentProperty = null;
@@ -193,19 +206,38 @@ final class RunsCollector
         return $start;
     }
 
-    public function endEventListener(): float
+    public function endEventListener(string $event): float
     {
         assert($this->eventListenerStack->count() > 0);
 
         $elTrace = $this->eventListenerStack->pop();
-        $elTrace['duration'] = microtime(true) - $elTrace['start'];
 
-        if ($this->currentProperty) {
+        if (Events::PRE_SERIALIZE === $event) {
+            assert(!empty($this->currentProperty));
+            $elTrace['duration'] = microtime(true) - $elTrace['start'];
             $this->currentObject['properties'][$this->currentProperty]['eventListeners'][] = $elTrace;
-        } else {
+        } elseif (Events::POST_SERIALIZE === $event) {
+            $elTrace['duration'] = microtime(true) - $elTrace['start'];
             $this->currentObject['eventListeners'][] = $elTrace;
         }
 
+        if (Events::PRE_DESERIALIZE === $event) {
+            //todo
+        } elseif (Events::POST_DESERIALIZE === $event) {
+            //todo
+        }
+
         return $elTrace['duration'];
+    }
+
+    public function addMetadataLoad(array $trace): void
+    {
+        if ($this->currentProperty) {
+            $this->currentObject['properties'][$this->currentProperty]['metadata'][] = $trace;
+        } else {
+            $this->currentObject['metadata'][] = $trace;
+        }
+
+        $this->loadedMetadata[] = $trace;
     }
 }

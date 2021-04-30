@@ -1,37 +1,33 @@
-<h2>Metadata</h2>
+<h2>Loaded metadata</h2>
 
-{% if data is empty %}
+{%- if collector.loadedMetadata is empty -%}
     <div class="empty">
-        <p>No events have been recorded. Check that debugging is enabled in the kernel.</p>
+        <p>No metadata have been loaded.</p>
     </div>
-{% else %}
-    <div class="sf-tabs">
-        <div class="tab">
-            <h3 class="tab-title">Called Listeners <span class="badge">{{ collector.calledlisteners|length }}</span></h3>
-
-            <div class="tab-content">
-                {{ helper.render_table(collector.calledlisteners) }}
-            </div>
-        </div>
-
-        <div class="tab">
-            <h3 class="tab-title">Not Called Listeners <span class="badge">{{ collector.notcalledlisteners|length }}</span></h3>
-            <div class="tab-content">
-                {% if collector.notcalledlisteners is empty %}
-                    <div class="empty">
-                        <p>
-                            <strong>There are no uncalled listeners</strong>.
-                        </p>
-                        <p>
-                            All listeners were called for this request or an error occurred
-                            when trying to collect uncalled listeners (in which case check the
-                            logs to get more information).
-                        </p>
-                    </div>
-                {% else %}
-                    {{ helper.render_table(collector.notcalledlisteners) }}
-                {% endif %}
-            </div>
+{%- else -%}
+    <div>
+        <div class="sf-toolbar-info-piece">
+            <b>Runs</b>
+            <span class="sf-toolbar-status">{{ collector.loadedMetadata|length }}</span>
         </div>
     </div>
-{% endif %}
+
+    <table>
+        <thead>
+        <tr>
+            <th>Class</th>
+            <th>Format</th>
+            <th>File</th>
+            <th>Duration</th>
+        </tr>
+        </thead>
+        {%- for md in collector.loadedMetadata -%}
+            <tr>
+                <td>{{ md.class }}</td>
+                <td>{{ md.format }}</td>
+                <td>{{ md.file|default }}</td>
+                <td>{{ (md.duration * 1000)|number_format(4) }}ms</td>
+            </tr>
+        {%- endfor -%}
+    </table>
+{%- endif -%}

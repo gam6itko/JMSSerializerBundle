@@ -3,7 +3,6 @@
 namespace JMS\SerializerBundle\Debug\Visitor;
 
 use JMS\Serializer\GraphNavigatorInterface;
-use JMS\Serializer\JsonDeserializationVisitor;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
 use JMS\Serializer\Visitor\DeserializationVisitorInterface;
