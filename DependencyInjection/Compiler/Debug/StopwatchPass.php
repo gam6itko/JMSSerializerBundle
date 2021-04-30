@@ -27,7 +27,8 @@ class StopwatchPass implements CompilerPassInterface
         $decorator = $container->register($decoratorId, StopwatchSerializer::class);
         $decorator
             ->addArgument(new Reference($innerId))
-            ->addArgument(new Reference('debug.stopwatch'));
+            ->addArgument(new Reference('debug.stopwatch'))
+            ->addArgument(new Reference('debug.jms_serializer.runs_collector'));
 
         $container->setAlias($id, new Alias($decoratorId));
     }

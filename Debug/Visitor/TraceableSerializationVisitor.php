@@ -66,27 +66,16 @@ final class TraceableSerializationVisitor implements SerializationVisitorInterfa
 
     public function prepare($data)
     {
-        $this->collector->start();
-
         return $this->inner->prepare($data);
     }
 
     public function getResult($data)
     {
-        try {
-            return $this->inner->getResult($data);
-        } finally {
-            $this->collector->end(GraphNavigatorInterface::DIRECTION_SERIALIZATION, $this->getFormat());
-        }
+        return $this->inner->getResult($data);
     }
 
     public function setNavigator(GraphNavigatorInterface $navigator): void
     {
         $this->inner->setNavigator($navigator);
-    }
-
-    private function getFormat(): string
-    {
-        return $this->inner instanceof JsonSerializationVisitor ? 'json' : 'xml';
     }
 }

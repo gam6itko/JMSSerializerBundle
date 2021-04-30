@@ -76,20 +76,11 @@ final class TraceableDeserializationVisitor implements DeserializationVisitorInt
 
     public function getResult($data)
     {
-        try {
-            return $this->inner->getResult($data);
-        } finally {
-            $this->collector->end(GraphNavigatorInterface::DIRECTION_DESERIALIZATION, $this->getFormat());
-        }
+        return $this->inner->getResult($data);
     }
 
     public function setNavigator(GraphNavigatorInterface $navigator): void
     {
         $this->inner->setNavigator($navigator);
-    }
-
-    private function getFormat(): string
-    {
-        return $this->inner instanceof JsonDeserializationVisitor ? 'json' : 'xml';
     }
 }

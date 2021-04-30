@@ -2,7 +2,6 @@
 
 namespace JMS\SerializerBundle\Debug;
 
-use JMS\Serializer\EventDispatcher\Events;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
 
@@ -199,20 +198,12 @@ final class RunsCollector
         assert($this->eventListenerStack->count() > 0);
 
         $elTrace = $this->eventListenerStack->pop();
+        $elTrace['duration'] = microtime(true) - $elTrace['start'];
 
-        if (Events::PRE_SERIALIZE === $event) {
-            assert(!empty($this->currentProperty));
-            $elTrace['duration'] = microtime(true) - $elTrace['start'];
+        if ($this->currentProperty) {
             $this->currentObject['properties'][$this->currentProperty]['eventListeners'][] = $elTrace;
-        } elseif (Events::POST_SERIALIZE === $event) {
-            $elTrace['duration'] = microtime(true) - $elTrace['start'];
+        } else {
             $this->currentObject['eventListeners'][] = $elTrace;
-        }
-
-        if (Events::PRE_DESERIALIZE === $event) {
-            assert(false);//todo
-        } elseif (Events::POST_DESERIALIZE === $event) {
-            assert(false);//todo
         }
 
         return $elTrace['duration'];
