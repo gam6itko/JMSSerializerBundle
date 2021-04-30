@@ -30,7 +30,7 @@ final class TraceableEventListener
         try {
             return call_user_func_array([$this->inner, $method], $arguments);
         } finally {
-            $call['duration'] = $this->collector->endEventListener($arguments[1], $this->getInnerClass(), $method);
+            $call['duration'] = $this->collector->endEventListener();
             $this->calls[$format][] = $call;
         }
     }

@@ -193,7 +193,7 @@ final class RunsCollector
         return $start;
     }
 
-    public function endEventListener(string $event, string $listenerClass, string $method): float
+    public function endEventListener(): float
     {
         assert($this->eventListenerStack->count() > 0);
 
