@@ -118,7 +118,7 @@ final class RunsCollector
         assert(empty($this->handlerStack) || $this->handlerStack->isEmpty());
         assert(empty($this->eventListenerStack) || $this->eventListenerStack->isEmpty());
         assert(empty($this->preEventsStash));
-        assert(empty($this->postDeserializationTarget));
+//        assert(empty($this->postDeserializationTarget));
 
         $this->reset();
         $this->currentObject['direction'] = $direction;
@@ -263,7 +263,7 @@ final class RunsCollector
 
     private function getDirection(): int
     {
-        $first = $this->objectStack->bottom();
+        $first = $this->objectStack->isEmpty() ? $this->currentObject : $this->objectStack->bottom();
         return $first['direction'];
     }
 }
