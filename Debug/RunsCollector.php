@@ -3,24 +3,26 @@
 namespace JMS\SerializerBundle\Debug;
 
 use JMS\Serializer\EventDispatcher\Events;
-use JMS\Serializer\GraphNavigatorInterface;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Metadata\PropertyMetadata;
 
 final class RunsCollector
 {
-    /** @var array */
+    /** @var array All serializer runs traces */
     private $runs = [];
 
+    /** @var array Current visiting object trace data */
     private $currentObject;
+
     /** @var \SplStack */
     private $objectStack;
 
+    /** @var array Current visiting property traces */
     private $currentProperty;
     /** @var \SplStack */
     private $propertyStack;
 
-    /** @var \SplStack */
+    /** @var \SplStack Indicates visiting of array */
     private $arrayVisitStack;
 
     /** @var \SplStack */
@@ -34,9 +36,8 @@ final class RunsCollector
 
     private $loadedMetadata = [];
 
+    /** @var array Stores pre_serialize and pre_deserialize events traces to until startVisitingObject has been called */
     private $preEventsStash = [];
-
-//todo    private $postDeserializationTarget;
 
     public function startVisitingArray($data, $type): void
     {
@@ -83,6 +84,8 @@ final class RunsCollector
             'eventListeners' => $this->preEventsStash,
             'metadata'       => [],
         ];
+
+        $this->preEventsStash = [];
     }
 
     public function endVisitingObject(ClassMetadata $metadata, $data, array $type): void
@@ -92,11 +95,7 @@ final class RunsCollector
         $child = $this->currentObject;
 
         $this->currentObject = $this->objectStack->pop();
-        $this->placeChild($child);
-
-        if (GraphNavigatorInterface::DIRECTION_DESERIALIZATION === $this->getDirection()) {
-//            todo $this->postDeserializationTarget = &$child;
-        }
+        $this->placeChildObject($child);
     }
 
     public function getRuns(): array
@@ -104,7 +103,7 @@ final class RunsCollector
         return $this->runs;
     }
 
-    public function getLoadedMetadata()
+    public function getLoadedMetadata(): array
     {
         return $this->loadedMetadata;
     }
@@ -118,7 +117,6 @@ final class RunsCollector
         assert(empty($this->handlerStack) || $this->handlerStack->isEmpty());
         assert(empty($this->eventListenerStack) || $this->eventListenerStack->isEmpty());
         assert(empty($this->preEventsStash));
-//        assert(empty($this->postDeserializationTarget));
 
         $this->reset();
         $this->currentObject['direction'] = $direction;
@@ -141,7 +139,7 @@ final class RunsCollector
         return $this->objectStack->count() === $this->arrayVisitStack->top();
     }
 
-    private function placeChild(array $child): void
+    private function placeChildObject(array $child): void
     {
         if ($this->withinArray()) {
             if ($this->currentProperty) {
@@ -158,7 +156,7 @@ final class RunsCollector
             );
         } elseif (0 === $this->objectStack->count()) {
             // object is root
-            $this->currentObject = array_merge($this->currentObject, $child);
+            $this->currentObject = array_merge($this->currentObject, array_filter($child));
         }
     }
 
@@ -226,14 +224,16 @@ final class RunsCollector
         $elTrace['duration'] = microtime(true) - $elTrace['start'];
 
         if ($this->withinArray()) {
-            //triggers before startVisitingObject
             if (in_array($event, [Events::PRE_SERIALIZE, Events::PRE_DESERIALIZE])) {
+                //triggers before startVisitingObject
                 $this->preEventsStash[] = $elTrace;
             } elseif (Events::POST_SERIALIZE === $event) {
+                //triggers before endVisitingObject
                 $this->currentObject['eventListeners'][] = $elTrace;
             } elseif (Events::POST_DESERIALIZE === $event) {
-//todo                $this->postDeserializationTarget['eventListeners'][] = $elTrace;
-//todo                $this->postDeserializationTarget = null;
+                //triggers after endVisitingObject. $this->>currentObject does not point to the object for the corresponding event
+                $end = &$this->currentObject['properties'][$this->currentProperty]['properties'];
+                $end[count($end) - 1]['eventListeners'][] = $elTrace;
             }
         } else {
             if (in_array($event, [Events::PRE_SERIALIZE, Events::PRE_DESERIALIZE])) {
@@ -242,7 +242,10 @@ final class RunsCollector
                 } else {
                     $this->currentObject['eventListeners'][] = $elTrace;
                 }
-            } elseif (in_array($event, [Events::POST_SERIALIZE, Events::POST_DESERIALIZE])) {
+            } elseif (Events::POST_SERIALIZE === $event) {
+                $this->currentObject['eventListeners'][] = $elTrace;
+            } elseif (Events::POST_DESERIALIZE === $event) {
+                //not sure that it's works perfectly
                 $this->currentObject['eventListeners'][] = $elTrace;
             }
         }
@@ -259,11 +262,5 @@ final class RunsCollector
         }
 
         $this->loadedMetadata[] = $trace;
-    }
-
-    private function getDirection(): int
-    {
-        $first = $this->objectStack->isEmpty() ? $this->currentObject : $this->objectStack->bottom();
-        return $first['direction'];
     }
 }
