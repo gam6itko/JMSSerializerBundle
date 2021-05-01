@@ -24,7 +24,9 @@
                             <code class="sf-dump-str">{{ (run.duration * 1000)|number_format(2) }}ms</code>
                         </h4>
 
-                        {{- helper.metadata(run) -}}
+                        {{- helper.eventListenersCard(run) -}}
+                        {{- helper.handlersCard(run) -}}
+                        {{- helper.metadataCard(run) -}}
 
                         <ul>
                             {%- for propertyName, child in run.properties -%}
@@ -48,6 +50,20 @@
         </code>
     </div>
 
+    {{- helper.eventListenersCard(run) -}}
+    {{- helper.handlersCard(run) -}}
+    {{- helper.metadataCard(run) -}}
+
+    {%- if run.properties|default -%}
+        <ul>
+            {%- for propertyName, child in run.properties -%}
+                <li>{{ helper.render_node(propertyName, child, totalDuration) }}</li>
+            {%- endfor -%}
+        </ul>
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro eventListenersCard(run) -%}
     {%- if run.eventListeners|default -%}
         <div class="card">
             <div class="label">Event listeners</div>
@@ -60,7 +76,9 @@
             {%- endfor -%}
         </div>
     {%- endif -%}
+{%- endmacro -%}
 
+{%- macro handlersCard(run) -%}
     {%- if run.handlers|default -%}
         <div class="card">
             <div class="label">Handlers</div>
@@ -72,19 +90,9 @@
             {%- endfor -%}
         </div>
     {%- endif -%}
-
-    {{- helper.metadata(run) -}}
-
-    {%- if run.properties|default -%}
-        <ul>
-            {%- for propertyName, child in run.properties -%}
-                <li>{{ helper.render_node(propertyName, child, totalDuration) }}</li>
-            {%- endfor -%}
-        </ul>
-    {%- endif -%}
 {%- endmacro -%}
 
-{%- macro metadata(run) -%}
+{%- macro metadataCard(run) -%}
     {%- if run.metadata|default -%}
         <div class="card">
             <div class="label">Metadata</div>

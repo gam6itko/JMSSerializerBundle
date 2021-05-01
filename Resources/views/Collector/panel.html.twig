@@ -57,11 +57,16 @@
 
 {%- block menu -%}
     {# This left-hand menu appears when using the full-screen profiler. #}
-    <span class="label {{ false ? 'disabled' }} {{ true |length ? 'label-status-error' }}">
+    <span class="label {{ collector.runs is empty ? 'disabled' : '' }}">
         <span class="icon">
             {{ include('@JMSSerializer/icon.svg') }}
         </span>
         <strong>JMS Serializer</strong>
+        {%- if collector.runs is not empty -%}
+            <span class="count">
+                <span>{{ collector.runs|length }}</span>
+            </span>
+        {%- endif -%}
     </span>
 {%- endblock -%}
 
